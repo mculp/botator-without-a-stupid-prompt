@@ -72,13 +72,6 @@ async def on_message_process(message: discord.Message, self: Chat):
     if message.content.startswith("-") or message.content.startswith("//"):
         #print("The message is a comment")
         return
-    #select channels from the premium table
-    try : 
-        cp.execute("SELECT * FROM channels WHERE guild_id = ?", (message.guild.id,))
-        channels = cp.fetchone()[1:]   
-    except :
-        channels = []
-        #print("No premium channels")
     #print("here2")
     try : original_message = await message.channel.fetch_message(message.reference.message_id)
     except : original_message = None
@@ -86,12 +79,6 @@ async def on_message_process(message: discord.Message, self: Chat):
         original_message = None
         #print("The message is a reply, but the reply is not to the bot")
     #print("here")
-    try : 
-        cp.execute("SELECT premium FROM data WHERE guild_id = ?", (message.guild.id,))
-        premium = cp.fetchone()[0]
-    except : 
-        premium = 0
-        #print("No premium")
     if str(message.channel.id) != str(c.fetchone()[0]) :
         #check if the message is a mention or if the message replies to the bot
         if original_message != None:
@@ -103,25 +90,10 @@ async def on_message_process(message: discord.Message, self: Chat):
         else :
             #print("The message has been sent in the wrong channel")
             return
-    #check if the bot hasn't been used more than 5000 times in the last 24 hours (uses_count_today)
-    c.execute("SELECT uses_count_today FROM data WHERE guild_id = ?", (message.guild.id,))
-    uses = c.fetchone()[0]
     ###print(uses)
-    try:
-        cp.execute("SELECT premium FROM data WHERE guild_id = ?", (message.guild.id,))
-        premium = cp.fetchone()[0]
-    except: premium = 0
-    ###print("here1")
-    if uses >= 500 and premium == 0:
-        ##print(f"The bot has been used more than {max_uses} times in the last 24 hours in this guild. Please try again in 24h.")
-        await message.channel.send("The bot has been used more than 500 times in the last 24 hours in this guild. Please try again in 24h.")
-        return
     #add 1 to the uses_count_today
     #show that the bot is typing
     await message.channel.trigger_typing()
-    if message.guild.id != 1021872219888033903:
-        c.execute("UPDATE data SET uses_count_today = uses_count_today + 1 WHERE guild_id = ?", (message.guild.id,))
-        conn.commit()
     #get the api key from the database
     c.execute("SELECT api_key FROM data WHERE guild_id = ?", (message.guild.id,))
     api_key = c.fetchone()[0]
